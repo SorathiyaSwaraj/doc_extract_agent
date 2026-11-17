@@ -1,0 +1,29 @@
+# Real documents and anything generated from them
+/data/
+*.pdf
+!tests/fixtures/**/*.pdf
+
+# Raw evaluation output; measured results are summarised in docs/EVALUATION.md
+/eval/results/
+
+# Public datasets are downloaded by script, never committed (each has its own license)
+/datasets/
+
+# Service database and stored uploads
+/var/
+
+# Secrets and local configuration
+.env
+/monitoring/api_key
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Personal notes and study material
+/COMMITS.md
+/study/
