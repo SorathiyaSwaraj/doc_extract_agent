@@ -1,0 +1,34 @@
+# Alerts for the conditions that need a person. Thresholds are starting points; set
+# them from a few weeks of normal traffic.
+groups:
+  - name: doc-extract
+    rules:
+      - alert: QueueBacklog
+        expr: doc_extract_documents{status="queued"} > 50
+        for: 15m
+        annotations:
+          summary: More than 50 documents have waited 15 minutes; add workers or check the model provider.
+
+      - alert: ProviderFailing
+        expr: rate(doc_extract_document_failures_total{kind="transient"}[10m]) > 0.05
+        for: 10m
+        annotations:
+          summary: Model calls keep failing (outage, rate limit, or a revoked key).
+
+      - alert: ProcessingErrors
+        expr: increase(doc_extract_document_failures_total{kind="error"}[1h]) > 0
+        annotations:
+          summary: A document failed with an unexpected error; this is a bug or a malformed PDF.
+
+      - alert: BudgetSpent
+        expr: doc_extract_budget_paused == 1
+        annotations:
+          summary: The daily model budget is spent; documents wait until midnight UTC.
+
+      - alert: AutomationDropped
+        expr: >
+          sum(rate(doc_extract_documents_processed_total{decision="approve"}[6h]))
+          / sum(rate(doc_extract_documents_processed_total[6h])) < 0.5
+        for: 1h
+        annotations:
+          summary: Under half of documents are auto-approved; check for a new layout, worse scans, or a model change.

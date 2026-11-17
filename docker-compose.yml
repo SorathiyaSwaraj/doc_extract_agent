@@ -1,0 +1,33 @@
+# Local deployment: the API with its workers, and a volume for the database and uploads.
+#   cp .env.example .env    # then fill in the keys
+#   docker compose up --build
+# With Prometheus at http://localhost:9090 (put one API key in monitoring/api_key first):
+#   docker compose --profile monitoring up --build
+services:
+  api:
+    build: .
+    image: doc-extract-agent:latest
+    ports:
+      - "127.0.0.1:8000:8000"   # localhost only; put a TLS proxy in front for anything else
+    env_file: .env
+    environment:
+      DOC_EXTRACT_VENDORS: /config/vendors.json
+    volumes:
+      - doc-extract-data:/var/lib/doc-extract
+      - ./data/vendors.json:/config/vendors.json:ro
+    restart: unless-stopped
+    stop_grace_period: 60s    # let a worker finish the document it is on
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    profiles: [monitoring]
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - ./monitoring/api_key:/etc/prometheus/api_key:ro
+    depends_on: [api]
+
+volumes:
+  doc-extract-data:
