@@ -1,0 +1,6 @@
+# Only pyproject.toml and src/ are needed to build the image. Keep data, results,
+# secrets, and local environments out of the build context.
+*
+!pyproject.toml
+!src/
+**/__pycache__
